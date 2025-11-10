@@ -1,3 +1,10 @@
+///∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗*
+//∗ @file: Proj3.java
+//∗ @description: This program have bubble, quick, heap, merge and transposition sorting algorithms that takes Automobile.csv as input file and generate a csv file with time taken and a txt file of the sorted lists
+//∗ @author: Eric
+//∗ @date: November 10, 2025
+//∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗/
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -44,11 +51,11 @@ public class Proj3 {
             }
         }
         // Copy remaining elements of L[] if any
-        while(i<=num1){
+        while(i < num1){
             a.set(k++, L.get(i++));
         }
         // Copy remaining elements of R[] if any
-        while(j<=num2){
+        while(j < num2){
             a.set(k++, R.get(j++));
         }
 
@@ -76,13 +83,13 @@ public class Proj3 {
         // go through and move small elements to the left
         for (int j = left; j <= right - 1; j++) {
             if (a.get(j).compareTo(pivot) < 0) {
-                swap(a, i, j);
                 i++;
+                swap(a, i, j);
             }
         }
         // Move pivot after smaller elements
-        swap(a, i, right);
-        return i;
+        swap(a, i + 1, right);
+        return i + 1;
     }
 
     static <T> void swap(ArrayList<T> a, int i, int j) {
@@ -195,9 +202,6 @@ public class Proj3 {
     }
 
     public static void main(String [] args)  throws IOException {
-        //...
-        // Finish Me
-        //...
         if (args.length != 3) {
             System.out.println("Usage: java Proj3 {dataset-file} {sorting-algorithm-type} {number-of-lines}");
             System.out.println("sorting-algorithm-type: bubble | merge | quick | heap | transposition");
@@ -208,11 +212,18 @@ public class Proj3 {
         String algorithm = args[1].toLowerCase().trim();
         int linesToRead = Integer.parseInt(args[2]);
 
-        ArrayList<String> base = new ArrayList<>();
+        ArrayList<Automobile> base = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(datasetFile))) {
             String line;
+            br.readLine(); // Skip header
             while (base.size() < linesToRead && (line = br.readLine()) != null) {
-                if (!line.trim().isEmpty()) base.add(line.trim());
+                if (!line.trim().isEmpty()) {
+                    try {
+                        base.add(new Automobile(line.trim()));
+                    } catch (Exception e) {
+                        System.err.println("Skipping malformed line: " + line);
+                    }
+                }
             }
         }
 
@@ -222,18 +233,18 @@ public class Proj3 {
         }
 
         // Build variants
-        ArrayList<String> alreadySorted = new ArrayList<>(base);
+        ArrayList<Automobile> alreadySorted = new ArrayList<>(base);
         java.util.Collections.sort(alreadySorted);
 
-        ArrayList<String> shuffled = new ArrayList<>(base);
+        ArrayList<Automobile> shuffled = new ArrayList<>(base);
         java.util.Collections.shuffle(shuffled);
 
-        ArrayList<String> reversed = new ArrayList<>(base);
+        ArrayList<Automobile> reversed = new ArrayList<>(base);
         java.util.Collections.sort(reversed, java.util.Collections.reverseOrder());
 
-        java.nio.file.Path csvPath = java.nio.file.Paths.get("analysis.txt");
+        java.nio.file.Path csvPath = java.nio.file.Paths.get("analysis.csv");
         boolean needHeader = !java.nio.file.Files.exists(csvPath);
-        java.io.BufferedWriter csvOut = new java.io.BufferedWriter(new java.io.FileWriter("analysis.txt", true));
+        java.io.BufferedWriter csvOut = new java.io.BufferedWriter(new java.io.FileWriter("analysis.csv", true));
         if (needHeader) {
             csvOut.write("timestamp,algorithm,N,input_state,time_seconds,comparisons\n");
         }
@@ -247,7 +258,7 @@ public class Proj3 {
         switch (algorithm) {
             case "merge": {
                 // already_sorted
-                ArrayList<String> in1 = new ArrayList<>(alreadySorted);
+                ArrayList<Automobile> in1 = new ArrayList<>(alreadySorted);
                 long t0 = System.nanoTime();
                 mergeSort(in1, 0, in1.size() - 1);
                 long t1 = System.nanoTime();
@@ -255,11 +266,11 @@ public class Proj3 {
                 System.out.printf(loc, "MERGE | already_sorted | N=%d | time=%.6f s%n", in1.size(), secs);
                 csvOut.write(String.format(loc, "%s,merge,%d,already_sorted,%.9f,%s%n", timestamp, in1.size(), secs, ""));
                 sortedOut.write("[already_sorted] -> sorted output (" + in1.size() + "):\n");
-                for (String s : in1) sortedOut.write(s + "\n");
+                for (Automobile s : in1) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
 
                 // shuffled
-                ArrayList<String> in2 = new ArrayList<>(shuffled);
+                ArrayList<Automobile> in2 = new ArrayList<>(shuffled);
                 t0 = System.nanoTime();
                 mergeSort(in2, 0, in2.size() - 1);
                 t1 = System.nanoTime();
@@ -267,11 +278,11 @@ public class Proj3 {
                 System.out.printf(loc, "MERGE | shuffled       | N=%d | time=%.6f s%n", in2.size(), secs);
                 csvOut.write(String.format(loc, "%s,merge,%d,shuffled,%.9f,%s%n", timestamp, in2.size(), secs, ""));
                 sortedOut.write("[shuffled] -> sorted output (" + in2.size() + "):\n");
-                for (String s : in2) sortedOut.write(s + "\n");
+                for (Automobile s : in2) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
 
                 // reversed
-                ArrayList<String> in3 = new ArrayList<>(reversed);
+                ArrayList<Automobile> in3 = new ArrayList<>(reversed);
                 t0 = System.nanoTime();
                 mergeSort(in3, 0, in3.size() - 1);
                 t1 = System.nanoTime();
@@ -279,13 +290,13 @@ public class Proj3 {
                 System.out.printf(loc, "MERGE | reversed       | N=%d | time=%.6f s%n", in3.size(), secs);
                 csvOut.write(String.format(loc, "%s,merge,%d,reversed,%.9f,%s%n", timestamp, in3.size(), secs, ""));
                 sortedOut.write("[reversed] -> sorted output (" + in3.size() + "):\n");
-                for (String s : in3) sortedOut.write(s + "\n");
+                for (Automobile s : in3) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
                 break;
             }
 
             case "quick": {
-                ArrayList<String> in1 = new ArrayList<>(alreadySorted);
+                ArrayList<Automobile> in1 = new ArrayList<>(alreadySorted);
                 long t0 = System.nanoTime();
                 quickSort(in1, 0, in1.size() - 1);
                 long t1 = System.nanoTime();
@@ -293,10 +304,10 @@ public class Proj3 {
                 System.out.printf(loc, "QUICK | already_sorted | N=%d | time=%.6f s%n", in1.size(), secs);
                 csvOut.write(String.format(loc, "%s,quick,%d,already_sorted,%.9f,%s%n", timestamp, in1.size(), secs, ""));
                 sortedOut.write("[already_sorted] -> sorted output (" + in1.size() + "):\n");
-                for (String s : in1) sortedOut.write(s + "\n");
+                for (Automobile s : in1) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
 
-                ArrayList<String> in2 = new ArrayList<>(shuffled);
+                ArrayList<Automobile> in2 = new ArrayList<>(shuffled);
                 t0 = System.nanoTime();
                 quickSort(in2, 0, in2.size() - 1);
                 t1 = System.nanoTime();
@@ -304,10 +315,10 @@ public class Proj3 {
                 System.out.printf(loc, "QUICK | shuffled       | N=%d | time=%.6f s%n", in2.size(), secs);
                 csvOut.write(String.format(loc, "%s,quick,%d,shuffled,%.9f,%s%n", timestamp, in2.size(), secs, ""));
                 sortedOut.write("[shuffled] -> sorted output (" + in2.size() + "):\n");
-                for (String s : in2) sortedOut.write(s + "\n");
+                for (Automobile s : in2) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
 
-                ArrayList<String> in3 = new ArrayList<>(reversed);
+                ArrayList<Automobile> in3 = new ArrayList<>(reversed);
                 t0 = System.nanoTime();
                 quickSort(in3, 0, in3.size() - 1);
                 t1 = System.nanoTime();
@@ -315,13 +326,13 @@ public class Proj3 {
                 System.out.printf(loc, "QUICK | reversed       | N=%d | time=%.6f s%n", in3.size(), secs);
                 csvOut.write(String.format(loc, "%s,quick,%d,reversed,%.9f,%s%n", timestamp, in3.size(), secs, ""));
                 sortedOut.write("[reversed] -> sorted output (" + in3.size() + "):\n");
-                for (String s : in3) sortedOut.write(s + "\n");
+                for (Automobile s : in3) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
                 break;
             }
 
             case "heap": {
-                ArrayList<String> in1 = new ArrayList<>(alreadySorted);
+                ArrayList<Automobile> in1 = new ArrayList<>(alreadySorted);
                 long t0 = System.nanoTime();
                 heapSort(in1, 0, in1.size() - 1);
                 long t1 = System.nanoTime();
@@ -329,10 +340,10 @@ public class Proj3 {
                 System.out.printf(loc, "HEAP  | already_sorted | N=%d | time=%.6f s%n", in1.size(), secs);
                 csvOut.write(String.format(loc, "%s,heap,%d,already_sorted,%.9f,%s%n", timestamp, in1.size(), secs, ""));
                 sortedOut.write("[already_sorted] -> sorted output (" + in1.size() + "):\n");
-                for (String s : in1) sortedOut.write(s + "\n");
+                for (Automobile s : in1) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
 
-                ArrayList<String> in2 = new ArrayList<>(shuffled);
+                ArrayList<Automobile> in2 = new ArrayList<>(shuffled);
                 t0 = System.nanoTime();
                 heapSort(in2, 0, in2.size() - 1);
                 t1 = System.nanoTime();
@@ -340,10 +351,10 @@ public class Proj3 {
                 System.out.printf(loc, "HEAP  | shuffled       | N=%d | time=%.6f s%n", in2.size(), secs);
                 csvOut.write(String.format(loc, "%s,heap,%d,shuffled,%.9f,%s%n", timestamp, in2.size(), secs, ""));
                 sortedOut.write("[shuffled] -> sorted output (" + in2.size() + "):\n");
-                for (String s : in2) sortedOut.write(s + "\n");
+                for (Automobile s : in2) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
 
-                ArrayList<String> in3 = new ArrayList<>(reversed);
+                ArrayList<Automobile> in3 = new ArrayList<>(reversed);
                 t0 = System.nanoTime();
                 heapSort(in3, 0, in3.size() - 1);
                 t1 = System.nanoTime();
@@ -351,13 +362,13 @@ public class Proj3 {
                 System.out.printf(loc, "HEAP  | reversed       | N=%d | time=%.6f s%n", in3.size(), secs);
                 csvOut.write(String.format(loc, "%s,heap,%d,reversed,%.9f,%s%n", timestamp, in3.size(), secs, ""));
                 sortedOut.write("[reversed] -> sorted output (" + in3.size() + "):\n");
-                for (String s : in3) sortedOut.write(s + "\n");
+                for (Automobile s : in3) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
                 break;
             }
 
             case "bubble": {
-                ArrayList<String> in1 = new ArrayList<>(alreadySorted);
+                ArrayList<Automobile> in1 = new ArrayList<>(alreadySorted);
                 long t0 = System.nanoTime();
                 long comps = bubbleSort(in1, in1.size());
                 long t1 = System.nanoTime();
@@ -365,10 +376,10 @@ public class Proj3 {
                 System.out.printf(loc, "BUBBLE| already_sorted | N=%d | time=%.6f s | comparisons=%d%n", in1.size(), secs, comps);
                 csvOut.write(String.format(loc, "%s,bubble,%d,already_sorted,%.9f,%d%n", timestamp, in1.size(), secs, comps));
                 sortedOut.write("[already_sorted] -> sorted output (" + in1.size() + "):\n");
-                for (String s : in1) sortedOut.write(s + "\n");
+                for (Automobile s : in1) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
 
-                ArrayList<String> in2 = new ArrayList<>(shuffled);
+                ArrayList<Automobile> in2 = new ArrayList<>(shuffled);
                 t0 = System.nanoTime();
                 comps = bubbleSort(in2, in2.size());
                 t1 = System.nanoTime();
@@ -376,10 +387,10 @@ public class Proj3 {
                 System.out.printf(loc, "BUBBLE| shuffled       | N=%d | time=%.6f s | comparisons=%d%n", in2.size(), secs, comps);
                 csvOut.write(String.format(loc, "%s,bubble,%d,shuffled,%.9f,%d%n", timestamp, in2.size(), secs, comps));
                 sortedOut.write("[shuffled] -> sorted output (" + in2.size() + "):\n");
-                for (String s : in2) sortedOut.write(s + "\n");
+                for (Automobile s : in2) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
 
-                ArrayList<String> in3 = new ArrayList<>(reversed);
+                ArrayList<Automobile> in3 = new ArrayList<>(reversed);
                 t0 = System.nanoTime();
                 comps = bubbleSort(in3, in3.size());
                 t1 = System.nanoTime();
@@ -387,34 +398,43 @@ public class Proj3 {
                 System.out.printf(loc, "BUBBLE| reversed       | N=%d | time=%.6f s | comparisons=%d%n", in3.size(), secs, comps);
                 csvOut.write(String.format(loc, "%s,bubble,%d,reversed,%.9f,%d%n", timestamp, in3.size(), secs, comps));
                 sortedOut.write("[reversed] -> sorted output (" + in3.size() + "):\n");
-                for (String s : in3) sortedOut.write(s + "\n");
+                for (Automobile s : in3) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
                 break;
             }
 
             case "transposition": {
-                ArrayList<String> in1 = new ArrayList<>(alreadySorted);
+                ArrayList<Automobile> in1 = new ArrayList<>(alreadySorted);
+                long t0 = System.nanoTime();
                 long comps = transpositionSort(in1, in1.size()); // 1 comparison per phase
-                System.out.printf(loc, "TRANS | already_sorted | N=%d | comparisons=%d (1 per phase)%n", in1.size(), comps);
-                csvOut.write(String.format(loc, "%s,transposition,%d,already_sorted,%s,%d%n", timestamp, in1.size(), "", comps));
+                long t1 = System.nanoTime();
+                double secs = (t1 - t0) / 1_000_000_000.0;
+                System.out.printf(loc, "TRANS | already_sorted | N=%d | time=%.6f s | comparisons=%d (1 per phase)%n", in1.size(), secs, comps);
+                csvOut.write(String.format(loc, "%s,transposition,%d,already_sorted,%.9f,%d%n", timestamp, in1.size(), secs, comps));
                 sortedOut.write("[already_sorted] -> sorted output (" + in1.size() + "):\n");
-                for (String s : in1) sortedOut.write(s + "\n");
+                for (Automobile s : in1) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
 
-                ArrayList<String> in2 = new ArrayList<>(shuffled);
+                ArrayList<Automobile> in2 = new ArrayList<>(shuffled);
+                t0 = System.nanoTime();
                 comps = transpositionSort(in2, in2.size());
-                System.out.printf(loc, "TRANS | shuffled       | N=%d | comparisons=%d (1 per phase)%n", in2.size(), comps);
-                csvOut.write(String.format(loc, "%s,transposition,%d,shuffled,%s,%d%n", timestamp, in2.size(), "", comps));
+                t1 = System.nanoTime();
+                secs = (t1 - t0) / 1_000_000_000.0;
+                System.out.printf(loc, "TRANS | shuffled       | N=%d | time=%.6f s | comparisons=%d (1 per phase)%n", in2.size(), secs, comps);
+                csvOut.write(String.format(loc, "%s,transposition,%d,shuffled,%.9f,%d%n", timestamp, in2.size(), secs, comps));
                 sortedOut.write("[shuffled] -> sorted output (" + in2.size() + "):\n");
-                for (String s : in2) sortedOut.write(s + "\n");
+                for (Automobile s : in2) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
 
-                ArrayList<String> in3 = new ArrayList<>(reversed);
+                ArrayList<Automobile> in3 = new ArrayList<>(reversed);
+                t0 = System.nanoTime();
                 comps = transpositionSort(in3, in3.size());
-                System.out.printf(loc, "TRANS | reversed       | N=%d | comparisons=%d (1 per phase)%n", in3.size(), comps);
-                csvOut.write(String.format(loc, "%s,transposition,%d,reversed,%s,%d%n", timestamp, in3.size(), "", comps));
+                t1 = System.nanoTime();
+                secs = (t1 - t0) / 1_000_000_000.0;
+                System.out.printf(loc, "TRANS | reversed       | N=%d | time=%.6f s | comparisons=%d (1 per phase)%n", in3.size(), secs, comps);
+                csvOut.write(String.format(loc, "%s,transposition,%d,reversed,%.9f,%d%n", timestamp, in3.size(), secs, comps));
                 sortedOut.write("[reversed] -> sorted output (" + in3.size() + "):\n");
-                for (String s : in3) sortedOut.write(s + "\n");
+                for (Automobile s : in3) sortedOut.write(s + "\n");
                 sortedOut.write("\n");
                 break;
             }
@@ -433,10 +453,53 @@ public class Proj3 {
         System.out.println("\n=== Run Complete ===");
         System.out.println("Algorithm : " + algorithm);
         System.out.println("N         : " + base.size());
-        System.out.println("CSV       : appended to analysis.txt");
+        System.out.println("CSV       : appended to analysis.csv");
         System.out.println("Sorted    : overwritten in sorted.txt");
 
 
 
+    }
+}
+
+class Automobile implements Comparable<Automobile> {
+    String name;
+    double mpg;
+    int cylinders;
+    double displacement;
+    double horsepower;
+    double weight;
+    double acceleration;
+    int model_year;
+    String origin;
+
+    public Automobile(String line) {
+        String[] parts = line.split(",");
+        this.name = parts[0];
+        try {
+            this.mpg = Double.parseDouble(parts[1]);
+        } catch (NumberFormatException e) {
+            this.mpg = 0;
+        }
+        this.cylinders = Integer.parseInt(parts[2]);
+        this.displacement = Double.parseDouble(parts[3]);
+        try {
+            this.horsepower = Double.parseDouble(parts[4]);
+        } catch (NumberFormatException e) {
+            this.horsepower = 0;
+        }
+        this.weight = Double.parseDouble(parts[5]);
+        this.acceleration = Double.parseDouble(parts[6]);
+        this.model_year = Integer.parseInt(parts[7]);
+        this.origin = parts[8];
+    }
+
+    @Override
+    public int compareTo(Automobile other) {
+        return Double.compare(this.acceleration, other.acceleration);
+    }
+
+    @Override
+    public String toString() {
+        return name + "," + mpg + "," + cylinders + "," + displacement + "," + horsepower + "," + weight + "," + acceleration + "," + model_year + "," + origin;
     }
 }
